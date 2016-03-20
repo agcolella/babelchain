@@ -1,188 +1,258 @@
+/// @title Proof of Understanding with Format, Content and Action Handshake
 contract ProofOfUnderstanding{
-	
-	// this contract is intended to call and coordinate the format, 
-	//content and action handshake contracts
-	// action depends on previous content, content on previous handshake
-  
-   FormatHandshake formathandshake;
-    
-    	address public sender;
-	address public receiver;
-	uint public messageToTranslate;
-// should somehow be accessible only for sender, own class ?	
-	uint public translationBounty;
-    
-    
-    function CreatedFormatHandshake(bytes32 _name) {
-       
-        // We do an explicit type conversion from `address`
-        // to `FormatHandshake` and assume that the type of
-        // the calling contract is TokenCreator, there is
-        // no real way to check that.
-        formathandshake = FormatHandshake(sender);//, receiver, messageToTranslate, translationBounty);
-        //formathandshake.sender = sender;
-      
-      //  	function FormatHandshake(
-	//	address _sender,
-	//	address _receiver,
-	//	uint  _messageToTranslate,
-	//	uint _translationBounty) 
-      
-    }
-    
-    
-}
-// punt in funcs here
-contract Sender {}
-contract Receiver {}
-contract Translator {}
 
-contract FormatHandshakeLearningSet{}
+address public sender;
+    address public receiver;
+    string public messageToTranslate;
+
+    uint private translationBounty;
+    address owner = msg.sender;
+
+    event Translationrequested(address sender, address receiver, string messageToTranslate);
+
+    // Constructor
+    function ProofOfUnderstanding( address pReceiver,
+                                   string pMessageToTranslate,
+                                   uint pTranslationBounty)
+    {
+        owner = msg.sender;
+        sender = msg.sender;
+        receiver = pReceiver;
+        messageToTranslate = pMessageToTranslate;
+        translationBounty = pTranslationBounty;
+// TO DO: how can translators and the receiver subscribe to this event ?
+        Translationrequested( sender,  receiver,  messageToTranslate);
+    }
+
+
+
+// this contract is intended to call and coordinate the format, content and action handshake contracts
+// a successful contenthandshake can exist only if there was a successful format handshake
+
+// 'successful' in this context means that both sender and receiver agree on a proposal
+// a 3rd party (they themselves can in special cases be that 3rd party) has made.
+
+// a proposal on a format consists of a string representing a message format
+
+// a proposal on content consists of a string representing a message format (format handshake)
+//   and a distrubution of values in the variable parts of the message
+
+// an action handshake is a proof of the receiver of the message, what he 'has done'
+//   with the messsage received, e.g. it could be be a snapshot of a status in a table
+//   or it could be a picture jpeg with evidence of an action take like.
+//   A proof of action can be seen as a test result, that can be checked by humans or advanced
+//   machine alogrithms to ensure they message exchange was successful
+
+    // parts of bounty are being paid out on resolving a format and content handshakes i.s.o.
+    //    sender and receiver agree its being resolved
+
+    // all handshakes, if succesful or not are being stored in a set, which will allow
+    // translators to earn from past communication attempts
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// Format Handshake /////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+struct FormatProposal
+   {
+// TO DO, add other fields
+        address sender;
+        address receiver;
+        bytes32 name;   // short name (up to 32 bytes)
+	bool senderAgreedFormat;  // if agreed
+	bool receiverAgreedFormat; // if agreed
+        address proposingFormatTranslator;
+        address  winningFormatTranslator; // who won
+    string  suggestedFormat; // suggested format
+    string  chosenFormat; // which format won
+    	bool contentHandshakeReverse; // reverted, 'cause they couldnt agree on next level ?
+	bool actionHandshakeReverse; // reverted, 'cause they couldnt agree on next level ?
+    }
+
+    FormatProposal instanceFormatProposal;
+
+
+    // A dynamically-sized array of `Proposal` structs.
+    FormatProposal[] public formatProposalsLearningSet;
+
+
+     // Any call to this function (even deeply nested) can
+        // be detected from the JavaScript API by filtering for e.g. `Formatsuggested` to be called.
+        // http://solidity.readthedocs.org/en/latest/contracts.html?highlight=string
+
+    // these events are designed for listening in js clients.
+    // For illustration, we 'pretend' they could inform sender, receiver, translator upon events
+    // directly
+  	event Formatsuggested(address Translator);
+event FormatRejectedSender(address sender);
+event FormatRejectedReceiver(address receiver);
+event FormatAgreedSender(address sender);
+event FormatAgreedReceiver(address receiver);
+
+event succesfulFormatHandshake();
+
+////////////////////////////////////////////////////////
+// Format Handshake Functions any Translator can call
+////////////////////////////////////////////////////////
+
+// OPEN QUESTION: how can the translator predict based on training set  ?
+ function suggestFormatByTranslator(address pTranslator) {
+
+     string memory pSuggestedformat ; // = "replace me";
+
+     for (uint i = 0; i < formatProposalsLearningSet.length; i++){
+          // read the learning set
+
+         // pSuggestedFormat = "HERE THE MAGIC HAS TO HAPPEN";
+    }
+
+
+    	  instanceFormatProposal.suggestedFormat = pSuggestedformat;
+
+    	  instanceFormatProposal.proposingFormatTranslator = pTranslator;
+    	  instanceFormatProposal.senderAgreedFormat = false;
+    	  instanceFormatProposal.receiverAgreedFormat = false;
+
+    	  //event to notify subscribing Sender and Receiver
+    	  Formatsuggested(pTranslator);
+       }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+// Sender Functions                                                                   //
+////////////////////////////////////////////////////////////////////////////////////////
+
+// function would get called based on Formatsuggested event
+function askSenderFormatApproval(address pSender)
+  {
+// OPEN QUESTION: how can sender decide to agree ?
+  bool howcantheSendersettlethequestionifformatworks4him;
+  if(!howcantheSendersettlethequestionifformatworks4him)
+  	{
+  	instanceFormatProposal.senderAgreedFormat = false;
+    // build up the learning set
+	formatProposalsLearningSet.push(instanceFormatProposal);
+    // Translator and Receiver subscribe to this event
+    FormatRejectedSender(pSender);
+  	}
+  else
+    {
+     instanceFormatProposal.senderAgreedFormat	= true;
+     FormatAgreedSender(pSender);
+     if( instanceFormatProposal.receiverAgreedFormat)
+	   {
+	   // pay significant part of bounty
+       //--> rest gets paid, if content and action dont backtrack here !!!
+       payBountyBySender();
+	   // build up the learning set
+	   formatProposalsLearningSet.push(instanceFormatProposal);
+	   succesfulFormatHandshake();
+	   }
+    }
+  }
+
+// Note the Sender could negotiate in a separate contract                             //
+//   a partial refund with the message receiver                                       //
+ 	// Note that parts of the bounty are paid with the content and action handshake only  //
+
+    modifier payOnlyAfterBothAgreed()
+  { if (instanceFormatProposal.senderAgreedFormat != true ||
+        instanceFormatProposal.receiverAgreedFormat != true)
+   throw;
+   _ }
+
+function payBountyBySender()
+  payOnlyAfterBothAgreed()
+  {
+  // pay significant part of bounty --> rest gets paid, if content and action dont backtrack here !!!
+  instanceFormatProposal.winningFormatTranslator.send(this.balance / 2);
+  }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////
+// Receiver Functions                                                                 //
+////////////////////////////////////////////////////////////////////////////////////////
+
+// function would get called based on Formatsuggested event
+function askReceiverFormatApproval(address pReceiver)
+  {
+// OPEN QUESTION: how can sender decide to agree ?
+  bool howcantheReceiversettlethequestionifformatworks4him;
+  if(!howcantheReceiversettlethequestionifformatworks4him)
+  	{
+  	instanceFormatProposal.receiverAgreedFormat = false;
+    // build up the learning set
+	formatProposalsLearningSet.push(instanceFormatProposal);
+    // Translator and Receiver subscribe to this event
+    FormatRejectedSender(pReceiver);
+  	}
+  else
+    {
+     instanceFormatProposal.receiverAgreedFormat	= true;
+     FormatAgreedReceiver(pReceiver);
+     if( instanceFormatProposal.senderAgreedFormat)
+	   {
+	   succesfulFormatHandshake();
+	   // build up the learning set
+	   formatProposalsLearningSet.push(instanceFormatProposal);
+	   }
+    }
+  }
+
+
+
+/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// Content Handshake ////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+// similar as Format, but Format handshake event needs to have been fired to start
+
+/////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// Action Handshake ////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+
+// only after content handshake event was fired
+
+}
+
+
+// This is called by the outside, via a transaction
+
+contract Sender {
+
+    address _Receiver;
+    string _MessageToTranslate;
+    //uint _balance =100;
+    uint _translationBounty = 20;
+
+    //  Sender creates a Proof of Understanding
+    // and thereby initiates the translation process
+    // he sets a bounty, which is split up
+    // along format, content & action handshake
+    function Sender(string pMessage, address pReceiver, uint pBounty){
+     _Receiver = pReceiver;
+     _MessageToTranslate = pMessage;
+     _translationBounty = pBounty;
+      createProofOfUnderstanding(_Receiver, _MessageToTranslate, _translationBounty) ;
+    }
+
+
+   // mapping (address => uint) balances;
+       function createProofOfUnderstanding( address pReceiver,
+                                            string pMessageToTranslate,
+                                            uint bounty) returns (address PoUAddr) {
+        return address(new ProofOfUnderstanding(pReceiver, pMessageToTranslate, bounty));
+    }
+
+
+
+}
+
+
+// contract Receiver {}
+// contract Translator {}
+
 
 // take out functions here and place in other functions
-contract FormatHandshake {
-	
-	// sender will pay. Receiver and sender can have another independent contract to split costs
-	address public sender;
-	address public receiver;
-	uint public messageToTranslate;
-// should somehow be accessible only for sender, own class ?	
-	uint public translationBounty;
-	
-  
-	bool receiverAgreedFormat ;
-	bool senderAgreedFormat ; 
-
-	address public winningTranslator;
-	uint public chosenformat;
-
-	/// Modifiers are a convenient way to validate inputs to
-    /// functions. `onlyBefore` is applied to `bid` below:
-    /// The new function body is the modifier's body where
-    /// `_` is replaced by the old function body.
-    modifier payOnlyAfterBothAgreed()	 
-	  { if (receiverAgreedFormat != true || senderAgreedFormat != true) 
-	   throw; 
-	   _ }
-	
-   
-	//modifier onlyAfter(uint _time) { if (now <= _time) throw; _ }
-
-	
-	
-// the chosenformat should be replaced with a more complex structure 
-// of rejected and approved data
-// this set should be permanently stored in the babelchain
-// it is meant to serve as a training set for translators machine learning
-
-		struct FormatProposal
-   {
-       bytes32 name;   // short name (up to 32 bytes)
-        bytes32 format;   // the suggested format
-		bool senderReply;  // if agreed
-		bool receiverReply; // if agreed
-    	bool contenthandshakeReverse; // reverted, 'cause they couldnt agree on next level ?
-		bool actionhandshakeReverse; // reverted, 'cause they couldnt agree on next level ?
-
-    }
-
-	
-    // A dynamically-sized array of `Proposal` structs.
-	// needs to be permanent
-    FormatProposal[] public formatProposals;
-	
-
-	event Formatsuggested(address translator);
-	event Formatrejected(address rejector);
-	event Formatagreed(address approver);
-	event formatHandshaked(address approver);
-	
-	
-	function FormatHandshake(
-		address _sender,
-		address _receiver,
-		uint  _messageToTranslate,
-		uint _translationBounty) 
-	{
-	 sender = _sender;
-	 receiver = _receiver;
-	 messageToTranslate = _messageToTranslate;
-	 translationBounty	= _translationBounty;
-	 receiverAgreedFormat =  false ;
-	 senderAgreedFormat =  false ; 	
-	}
-	
-// Do we need a class the Translator runs this	
-   function suggestFormat(uint suggestedformat) {
-        // Nsuggest only if not yet found
-       // if (formatFound = true ) {throw;}
-	   chosenformat = suggestedformat;
-
-	    //event Formatsuggested(address translator, address sender, address receiver, uint format); 
-	   senderAgreedFormat = false; 
-	   receiverAgreedFormat = false; 
-
-
-	   //myself
-	   //event Formatsuggested(address translator);
-   }
- 
-// should be in class of Sender
-	function askSenderApproval()
-	
-	{
-	
-	//if(!howcantheSendersettlethatquestion)
-	//	{
-	//	senderAgreedFormat	= false;
-		
-	//    Formatrejected(sender);
-	//	}
-	senderAgreedFormat	= true;
-	Formatagreed(sender);
-	if(receiverAgreedFormat)
-		 formatHandshaked(sender);
-	// pay significant part of bounty --> rest gets paid, if content and action dont backtrack here !!!
-	winningTranslator.send(this.balance);	
-	}
-	function payBount()
-	 payOnlyAfterBothAgreed()
-	{
-	
-	// pay significant part of bounty --> rest gets paid, if content and action dont backtrack here !!!
-	winningTranslator.send(this.balance / 2);	
-	}
-	
-// should be in class of Receiver	
-	function askReceiverApproval(){
-	//if(!howcantheSendersettlethatquestion)
-	//	{
-	//	receiverAgreedFormat	= false;
-	//    Formatrejected(sender);
-	//	}
-	receiverAgreedFormat	= true;
-	Formatagreed(receiver);
-	// we let the sender decide, as he pays
-	// he can try claiming back parts of the payment, 
-	// if the message was useful for the receiver
-	if(senderAgreedFormat)
-		 askSenderApproval();	
-	}
-
-	function () {
-        // This function gets executed if a
-        // transaction with invalid data is sent to
-        // the contract or just ether without data.
-        // We revert the send so that no-one
-        // accidentally loses money when using the
-        // contract.
-        throw;
-    }
-	
-}
-
-contract ContentHandshakeLearningSet{}
-contract ContentHandshake {}
-
-contract ActionHandshakeLearningSet{}
-contract ActionHandshake {}	
